@@ -1,6 +1,5 @@
 """Tests for row management endpoints."""
 
-import pytest
 from flask.testing import FlaskClient
 
 
@@ -17,26 +16,35 @@ class TestCreateRow:
 
     def test_create_row_invalid_type(self, client: FlaskClient, created_table: str):
         """Reject row with invalid data type."""
-        response = client.post(f"/tables/{created_table}/rows", json={
-            "data": {"name": "Alice", "age": "not a number", "active": True},
-        })
+        response = client.post(
+            f"/tables/{created_table}/rows",
+            json={
+                "data": {"name": "Alice", "age": "not a number", "active": True},
+            },
+        )
 
         assert response.status_code == 400
         assert "age" in response.get_json().get("field", "") or "number" in response.get_json().get("error", "")
 
     def test_create_row_unknown_column(self, client: FlaskClient, created_table: str):
         """Reject row with unknown column."""
-        response = client.post(f"/tables/{created_table}/rows", json={
-            "data": {"name": "Alice", "unknown_col": "value"},
-        })
+        response = client.post(
+            f"/tables/{created_table}/rows",
+            json={
+                "data": {"name": "Alice", "unknown_col": "value"},
+            },
+        )
 
         assert response.status_code == 400
 
     def test_create_row_table_not_found(self, client: FlaskClient):
         """Return 404 for non-existent table."""
-        response = client.post("/tables/00000000-0000-0000-0000-000000000000/rows", json={
-            "data": {"name": "Alice"},
-        })
+        response = client.post(
+            "/tables/00000000-0000-0000-0000-000000000000/rows",
+            json={
+                "data": {"name": "Alice"},
+            },
+        )
 
         assert response.status_code == 404
 
@@ -67,9 +75,12 @@ class TestUpdateRow:
     def test_update_row_success(self, client: FlaskClient, created_row: tuple[str, str]):
         """Successfully update a row."""
         table_id, row_id = created_row
-        response = client.put(f"/tables/{table_id}/rows/{row_id}", json={
-            "data": {"name": "Bob"},
-        })
+        response = client.put(
+            f"/tables/{table_id}/rows/{row_id}",
+            json={
+                "data": {"name": "Bob"},
+            },
+        )
 
         assert response.status_code == 200
         data = response.get_json()
@@ -80,9 +91,12 @@ class TestUpdateRow:
     def test_update_row_invalid_type(self, client: FlaskClient, created_row: tuple[str, str]):
         """Reject update with invalid data type."""
         table_id, row_id = created_row
-        response = client.put(f"/tables/{table_id}/rows/{row_id}", json={
-            "data": {"age": "not a number"},
-        })
+        response = client.put(
+            f"/tables/{table_id}/rows/{row_id}",
+            json={
+                "data": {"age": "not a number"},
+            },
+        )
 
         assert response.status_code == 400
 
@@ -168,7 +182,8 @@ class TestFilterRows:
     def test_pagination(self, client: FlaskClient, created_table: str):
         """Test pagination with limit and offset."""
         for i in range(5):
-            client.post(f"/tables/{created_table}/rows", json={"data": {"name": f"User{i}", "age": 20+i, "active": True}})
+            row_data = {"data": {"name": f"User{i}", "age": 20 + i, "active": True}}
+            client.post(f"/tables/{created_table}/rows", json=row_data)
 
         response = client.get(f"/tables/{created_table}/rows?limit=2&offset=2")
 
@@ -178,4 +193,3 @@ class TestFilterRows:
         assert data["total"] == 5
         assert data["limit"] == 2
         assert data["offset"] == 2
-

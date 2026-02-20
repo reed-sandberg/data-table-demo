@@ -66,4 +66,3 @@ class SchemaUpdate(BaseModel):
         if len(columns) != len(set(columns)):
             raise ValueError("Duplicate column names in remove_columns")
         return columns
-

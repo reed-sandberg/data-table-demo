@@ -2,15 +2,13 @@
 
 from __future__ import annotations
 
-from typing import Optional
-
 from flask import Flask, jsonify
 
 from .database import close_db, init_db
 from .routes import rows_bp, tables_bp
 
 
-def create_app(test_config: Optional[dict] = None) -> Flask:
+def create_app(test_config: dict | None = None) -> Flask:
     """Create and configure the Flask application.
 
     Args:
@@ -49,30 +47,34 @@ def create_app(test_config: Optional[dict] = None) -> Flask:
     # Root endpoint with API info
     @app.route("/")
     def index():
-        return jsonify({
-            "name": "Data Tables API",
-            "version": "0.1.0",
-            "endpoints": {
-                "tables": {
-                    "POST /tables": "Create a new table",
-                    "GET /tables": "List all tables",
-                    "GET /tables/<id>": "Get table details",
-                    "DELETE /tables/<id>": "Delete a table",
-                    "PATCH /tables/<id>/schema": "Update table schema",
-                },
-                "rows": {
-                    "GET /tables/<id>/rows": "List rows (supports ?filter[col]=val)",
-                    "POST /tables/<id>/rows": "Create a row",
-                    "GET /tables/<id>/rows/<row_id>": "Get a row",
-                    "PUT /tables/<id>/rows/<row_id>": "Update a row",
-                    "DELETE /tables/<id>/rows/<row_id>": "Delete a row",
-                },
-            },
-        }), 200
+        return (
+            jsonify(
+                {
+                    "name": "Data Tables API",
+                    "version": "0.1.0",
+                    "endpoints": {
+                        "tables": {
+                            "POST /tables": "Create a new table",
+                            "GET /tables": "List all tables",
+                            "GET /tables/<id>": "Get table details",
+                            "DELETE /tables/<id>": "Delete a table",
+                            "PATCH /tables/<id>/schema": "Update table schema",
+                        },
+                        "rows": {
+                            "GET /tables/<id>/rows": "List rows (supports ?filter[col]=val)",
+                            "POST /tables/<id>/rows": "Create a row",
+                            "GET /tables/<id>/rows/<row_id>": "Get a row",
+                            "PUT /tables/<id>/rows/<row_id>": "Update a row",
+                            "DELETE /tables/<id>/rows/<row_id>": "Delete a row",
+                        },
+                    },
+                }
+            ),
+            200,
+        )
 
     return app
 
 
 # Create default app instance for flask CLI
 app = create_app()
-

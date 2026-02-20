@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 import uuid
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from ..database import get_db, transaction
 from ..models.column import ColumnType
@@ -161,7 +161,7 @@ class RowService:
     @staticmethod
     def list_rows(
         table_id: str,
-        filters: Optional[Dict[str, Any]] = None,
+        filters: dict[str, Any] | None = None,
         limit: int = 100,
         offset: int = 0,
     ) -> RowListResponse:
@@ -187,8 +187,8 @@ class RowService:
         # Build base query
         query = "SELECT id, json(data) as data, created_at, updated_at FROM rows WHERE table_id = ?"
         count_query = "SELECT COUNT(*) as total FROM rows WHERE table_id = ?"
-        params: List[Any] = [table_id]
-        count_params: List[Any] = [table_id]
+        params: list[Any] = [table_id]
+        count_params: list[Any] = [table_id]
 
         # Add filter conditions
         if filters:

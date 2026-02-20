@@ -160,4 +160,3 @@ def delete_row(table_id: str, row_id: str) -> tuple[Response, int]:
         return jsonify({"error": str(e)}), 404
 
     return Response(status=204)
-

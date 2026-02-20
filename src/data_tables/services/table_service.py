@@ -5,7 +5,7 @@ from sqlite3 import IntegrityError
 
 from ..config import config
 from ..database import get_db, transaction
-from ..models import ColumnDefinition, SchemaUpdate, TableCreate
+from ..models import SchemaUpdate, TableCreate
 from ..models.column import ColumnResponse
 from ..models.table import TableListResponse, TableResponse
 
@@ -57,8 +57,8 @@ class TableService:
                     "INSERT INTO tables (id, name) VALUES (?, ?)",
                     (table_id, request.name),
                 )
-            except IntegrityError:
-                raise TableExistsError(f"Table '{request.name}' already exists")
+            except IntegrityError as e:
+                raise TableExistsError(f"Table '{request.name}' already exists") from e
 
             for position, col in enumerate(request.columns):
                 col_id = str(uuid.uuid4())
@@ -97,7 +97,9 @@ class TableService:
         return TableResponse(
             id=row["id"],
             name=row["name"],
-            columns=[ColumnResponse(id=c["id"], name=c["name"], type=c["type"], position=c["position"]) for c in columns],
+            columns=[
+                ColumnResponse(id=c["id"], name=c["name"], type=c["type"], position=c["position"]) for c in columns
+            ],
             created_at=row["created_at"],
             updated_at=row["updated_at"],
         )
@@ -107,13 +109,15 @@ class TableService:
         """List all tables with basic info."""
         conn = get_db()
 
-        rows = conn.execute("""
+        rows = conn.execute(
+            """
             SELECT t.id, t.name, t.created_at, COUNT(c.id) as column_count
             FROM tables t
             LEFT JOIN columns c ON t.id = c.table_id
             GROUP BY t.id
             ORDER BY t.created_at DESC
-        """).fetchall()
+        """
+        ).fetchall()
 
         return [
             TableListResponse(id=r["id"], name=r["name"], column_count=r["column_count"], created_at=r["created_at"])
@@ -199,6 +203,7 @@ class TableService:
                     (table_id,),
                 ).fetchall():
                     import json
+
                     data = json.loads(row["data_json"])
                     for col_name in request.remove_columns:
                         data.pop(col_name, None)
@@ -234,4 +239,3 @@ class TableService:
         conn = get_db()
         columns = conn.execute("SELECT name, type FROM columns WHERE table_id = ?", (table_id,)).fetchall()
         return {c["name"]: c["type"] for c in columns}
-

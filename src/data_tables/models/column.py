@@ -29,4 +29,3 @@ class ColumnResponse(BaseModel):
     name: str
     type: ColumnType
     position: int
-

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any
 
 from ..models.column import ColumnType
 
@@ -10,7 +10,7 @@ from ..models.column import ColumnType
 class ValidationError(Exception):
     """Raised when data validation fails."""
 
-    def __init__(self, message: str, field: Optional[str] = None):
+    def __init__(self, message: str, field: str | None = None):
         self.message = message
         self.field = field
         super().__init__(message)
@@ -39,19 +39,22 @@ class ValidationService:
 
         if column_type == ColumnType.STRING:
             if not isinstance(value, str):
-                raise ValidationError(f"Expected string for column '{column_name}', got {type(value).__name__}", column_name)
+                actual_type = type(value).__name__
+                raise ValidationError(f"Expected string for column '{column_name}', got {actual_type}", column_name)
             return value
 
         if column_type == ColumnType.NUMBER:
             if isinstance(value, bool):  # bool is subclass of int in Python
                 raise ValidationError(f"Expected number for column '{column_name}', got boolean", column_name)
             if not isinstance(value, (int, float)):
-                raise ValidationError(f"Expected number for column '{column_name}', got {type(value).__name__}", column_name)
+                actual_type = type(value).__name__
+                raise ValidationError(f"Expected number for column '{column_name}', got {actual_type}", column_name)
             return value
 
         if column_type == ColumnType.BOOLEAN:
             if not isinstance(value, bool):
-                raise ValidationError(f"Expected boolean for column '{column_name}', got {type(value).__name__}", column_name)
+                actual_type = type(value).__name__
+                raise ValidationError(f"Expected boolean for column '{column_name}', got {actual_type}", column_name)
             return value
 
         raise ValidationError(f"Unknown column type: {column_type}", column_name)
@@ -83,4 +86,3 @@ class ValidationService:
             validated[col_name] = ValidationService.validate_value(value, col_type, col_name)
 
         return validated
-

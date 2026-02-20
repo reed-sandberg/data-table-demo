@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 import sqlite3
+from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Generator, Optional
 
-from flask import current_app, g
+from flask import g
 
 from .config import config
 
@@ -28,7 +28,7 @@ def get_db() -> sqlite3.Connection:
     return g.db
 
 
-def close_db(e: Optional[Exception] = None) -> None:
+def close_db(e: Exception | None = None) -> None:
     """Close database connection at end of request."""
     db = g.pop("db", None)
     if db is not None:
@@ -66,7 +66,7 @@ def init_db() -> None:
     conn.commit()
 
 
-def init_db_standalone(db_path: Optional[str] = None) -> None:
+def init_db_standalone(db_path: str | None = None) -> None:
     """Initialize database schema without Flask context.
 
     Useful for testing and CLI initialization.
@@ -81,4 +81,3 @@ def init_db_standalone(db_path: Optional[str] = None) -> None:
     conn.executescript(schema_path.read_text())
     conn.commit()
     conn.close()
-

@@ -30,10 +30,7 @@ def create_table() -> tuple[Response, int]:
         data = TableCreate.model_validate(request.get_json())
     except ValidationError as e:
         # Convert Pydantic errors to JSON-serializable format (exclude ctx which may contain exceptions)
-        errors = [
-            {"loc": err.get("loc"), "msg": err.get("msg"), "type": err.get("type")}
-            for err in e.errors()
-        ]
+        errors = [{"loc": err.get("loc"), "msg": err.get("msg"), "type": err.get("type")} for err in e.errors()]
         return jsonify({"error": "Validation error", "details": errors}), 400
 
     try:
@@ -123,4 +120,3 @@ def update_schema(table_id: str) -> tuple[Response, int]:
         return jsonify({"error": str(e)}), 400
 
     return jsonify(table.model_dump()), 200
-

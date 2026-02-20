@@ -71,4 +71,3 @@ def created_row(client: FlaskClient, created_table: str, sample_row_data: dict) 
     response = client.post(f"/tables/{created_table}/rows", json=sample_row_data)
     assert response.status_code == 201
     return created_table, response.get_json()["id"]
-

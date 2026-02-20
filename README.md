@@ -207,6 +207,8 @@ PATCH /tables/{table_id}/schema
 | `add_columns` | array | No | Columns to add |
 | `remove_columns` | array | No | Column names to remove |
 
+> **Note:** When columns are removed, existing row data is automatically migrated—the removed column's data is stripped from all existing rows in the table.
+
 **Response** `200 OK`
 ```json
 {
@@ -477,7 +479,7 @@ This provides clear error messages indicating whether the request format is wron
 - **Basic filtering** - Only exact match equality filters; no operators like `>`, `<`, `LIKE`
 - **No relationships** - Cannot define foreign keys between user-defined tables
 - **No indexing** - Cannot create indexes on JSON columns (would require expression indexes)
-- **Schema validation on write only** - Existing rows aren't validated when columns are removed
+- **No retroactive validation** - When new columns are added, existing rows aren't backfilled or validated against the new schema until they're updated
 - **No column renaming** - Schema updates only support add/remove, not rename
 - **No default values** - Columns cannot have default values for new rows
 

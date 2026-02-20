@@ -1,6 +1,5 @@
 """Tests for table management endpoints."""
 
-import pytest
 from flask.testing import FlaskClient
 
 
@@ -26,31 +25,40 @@ class TestCreateTable:
 
     def test_create_table_invalid_column_type(self, client: FlaskClient):
         """Reject invalid column types."""
-        response = client.post("/tables", json={
-            "name": "test",
-            "columns": [{"name": "col1", "type": "invalid"}],
-        })
+        response = client.post(
+            "/tables",
+            json={
+                "name": "test",
+                "columns": [{"name": "col1", "type": "invalid"}],
+            },
+        )
 
         assert response.status_code == 400
 
     def test_create_table_duplicate_column_names(self, client: FlaskClient):
         """Reject duplicate column names within a table."""
-        response = client.post("/tables", json={
-            "name": "test",
-            "columns": [
-                {"name": "col1", "type": "string"},
-                {"name": "col1", "type": "number"},
-            ],
-        })
+        response = client.post(
+            "/tables",
+            json={
+                "name": "test",
+                "columns": [
+                    {"name": "col1", "type": "string"},
+                    {"name": "col1", "type": "number"},
+                ],
+            },
+        )
 
         assert response.status_code == 400
 
     def test_create_table_empty_columns(self, client: FlaskClient):
         """Reject tables with no columns."""
-        response = client.post("/tables", json={
-            "name": "test",
-            "columns": [],
-        })
+        response = client.post(
+            "/tables",
+            json={
+                "name": "test",
+                "columns": [],
+            },
+        )
 
         assert response.status_code == 400
 
@@ -120,9 +128,12 @@ class TestUpdateSchema:
 
     def test_add_column(self, client: FlaskClient, created_table: str):
         """Successfully add a new column."""
-        response = client.patch(f"/tables/{created_table}/schema", json={
-            "add_columns": [{"name": "email", "type": "string"}],
-        })
+        response = client.patch(
+            f"/tables/{created_table}/schema",
+            json={
+                "add_columns": [{"name": "email", "type": "string"}],
+            },
+        )
 
         assert response.status_code == 200
         data = response.get_json()
@@ -131,9 +142,12 @@ class TestUpdateSchema:
 
     def test_remove_column(self, client: FlaskClient, created_table: str):
         """Successfully remove a column."""
-        response = client.patch(f"/tables/{created_table}/schema", json={
-            "remove_columns": ["age"],
-        })
+        response = client.patch(
+            f"/tables/{created_table}/schema",
+            json={
+                "remove_columns": ["age"],
+            },
+        )
 
         assert response.status_code == 200
         data = response.get_json()
@@ -142,33 +156,42 @@ class TestUpdateSchema:
 
     def test_remove_nonexistent_column(self, client: FlaskClient, created_table: str):
         """Reject removing non-existent column."""
-        response = client.patch(f"/tables/{created_table}/schema", json={
-            "remove_columns": ["nonexistent"],
-        })
+        response = client.patch(
+            f"/tables/{created_table}/schema",
+            json={
+                "remove_columns": ["nonexistent"],
+            },
+        )
 
         assert response.status_code == 400
 
     def test_add_duplicate_column(self, client: FlaskClient, created_table: str):
         """Reject adding column with existing name."""
-        response = client.patch(f"/tables/{created_table}/schema", json={
-            "add_columns": [{"name": "name", "type": "string"}],
-        })
+        response = client.patch(
+            f"/tables/{created_table}/schema",
+            json={
+                "add_columns": [{"name": "name", "type": "string"}],
+            },
+        )
 
         assert response.status_code == 400
 
     def test_remove_column_updates_existing_rows(self, client: FlaskClient, created_table: str):
         """Removing a column should update existing row data to remove that field."""
         # Create a row with all columns
-        row_response = client.post(f"/tables/{created_table}/rows", json={
-            "data": {"name": "Alice", "age": 30, "active": True}
-        })
+        row_response = client.post(
+            f"/tables/{created_table}/rows", json={"data": {"name": "Alice", "age": 30, "active": True}}
+        )
         assert row_response.status_code == 201
         row_id = row_response.get_json()["id"]
 
         # Remove the 'age' column
-        schema_response = client.patch(f"/tables/{created_table}/schema", json={
-            "remove_columns": ["age"],
-        })
+        schema_response = client.patch(
+            f"/tables/{created_table}/schema",
+            json={
+                "remove_columns": ["age"],
+            },
+        )
         assert schema_response.status_code == 200
 
         # Verify the row no longer has the 'age' field
@@ -178,4 +201,3 @@ class TestUpdateSchema:
         assert "age" not in row_data
         assert row_data["name"] == "Alice"
         assert row_data["active"] is True
-
