@@ -1,5 +1,10 @@
 """Table management routes."""
 
+import uuid
+from collections.abc import Callable
+from functools import wraps
+from typing import Any
+
 from flask import Blueprint, Response, jsonify, request
 from pydantic import ValidationError
 
@@ -12,6 +17,32 @@ from ..services.table_service import (
 )
 
 tables_bp = Blueprint("tables", __name__, url_prefix="/tables")
+
+
+def validate_uuid(*param_names: str) -> Callable:
+    """Decorator to validate UUID format for path parameters.
+
+    Args:
+        *param_names: Names of path parameters to validate as UUIDs.
+
+    Returns:
+        Decorator function that validates the specified parameters.
+    """
+
+    def decorator(f: Callable) -> Callable:
+        @wraps(f)
+        def wrapper(*args: Any, **kwargs: Any) -> Any:
+            for param_name in param_names:
+                if param_name in kwargs:
+                    try:
+                        uuid.UUID(kwargs[param_name])
+                    except ValueError:
+                        return jsonify({"error": f"Invalid UUID format for {param_name}"}), 400
+            return f(*args, **kwargs)
+
+        return wrapper
+
+    return decorator
 
 
 @tables_bp.route("", methods=["POST"])
@@ -55,6 +86,7 @@ def list_tables() -> tuple[Response, int]:
 
 
 @tables_bp.route("/<table_id>", methods=["GET"])
+@validate_uuid("table_id")
 def get_table(table_id: str) -> tuple[Response, int]:
     """Get table details including schema.
 
@@ -63,6 +95,7 @@ def get_table(table_id: str) -> tuple[Response, int]:
 
     Returns:
         200: Table details with columns
+        400: Invalid UUID format
         404: Table not found
     """
     try:
@@ -74,6 +107,7 @@ def get_table(table_id: str) -> tuple[Response, int]:
 
 
 @tables_bp.route("/<table_id>", methods=["DELETE"])
+@validate_uuid("table_id")
 def delete_table(table_id: str) -> tuple[Response, int]:
     """Delete a table and all its data.
 
@@ -82,6 +116,7 @@ def delete_table(table_id: str) -> tuple[Response, int]:
 
     Returns:
         204: Successfully deleted
+        400: Invalid UUID format
         404: Table not found
     """
     try:
@@ -93,6 +128,7 @@ def delete_table(table_id: str) -> tuple[Response, int]:
 
 
 @tables_bp.route("/<table_id>/schema", methods=["PATCH"])
+@validate_uuid("table_id")
 def update_schema(table_id: str) -> tuple[Response, int]:
     """Update table schema by adding/removing columns.
 

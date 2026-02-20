@@ -1,6 +1,6 @@
 """Service layer for business logic."""
 
-from .row_service import InvalidFilterError, RowNotFoundError, RowService
+from .row_service import CorruptedDataError, InvalidFilterError, RowNotFoundError, RowService
 from .table_service import SchemaValidationError, TableExistsError, TableNotFoundError, TableService
 from .validation import DataValidationError, ValidationService
 
@@ -14,4 +14,5 @@ __all__ = [
     "RowNotFoundError",
     "InvalidFilterError",
     "DataValidationError",
+    "CorruptedDataError",
 ]

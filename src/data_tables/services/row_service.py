@@ -25,6 +25,31 @@ class InvalidFilterError(Exception):
     pass
 
 
+class CorruptedDataError(Exception):
+    """Raised when stored JSON data cannot be parsed."""
+
+    pass
+
+
+def _parse_row_data(data: str, row_id: str) -> dict[str, Any]:
+    """Safely parse JSON data from a row.
+
+    Args:
+        data: JSON string from database.
+        row_id: Row ID for error context.
+
+    Returns:
+        Parsed data dictionary.
+
+    Raises:
+        CorruptedDataError: If JSON parsing fails.
+    """
+    try:
+        return json.loads(data)
+    except json.JSONDecodeError as e:
+        raise CorruptedDataError(f"Row '{row_id}' contains corrupted data: {e}") from e
+
+
 class RowService:
     """Service for row CRUD operations."""
 
@@ -102,7 +127,7 @@ class RowService:
 
         return RowResponse(
             id=row["id"],
-            data=json.loads(row["data"]),
+            data=_parse_row_data(row["data"], row["id"]),
             created_at=row["created_at"],
             updated_at=row["updated_at"],
         )
@@ -143,7 +168,7 @@ class RowService:
                 raise RowNotFoundError(f"Row '{row_id}' not found in table '{table_id}'")
 
             # Merge existing data with updates
-            current_data = json.loads(existing["data"])
+            current_data = _parse_row_data(existing["data"], existing["id"])
             current_data.update(validated_data)
 
             conn.execute(
@@ -226,18 +251,21 @@ class RowService:
         query += " ORDER BY created_at DESC LIMIT ? OFFSET ?"
         params.extend([limit, offset])
 
-        rows = conn.execute(query, params).fetchall()
-
-        return RowListResponse(
-            rows=[
+        # Stream rows using cursor iteration instead of fetchall() to avoid loading all into memory
+        cursor = conn.execute(query, params)
+        rows = []
+        for r in cursor:
+            rows.append(
                 RowResponse(
                     id=r["id"],
-                    data=json.loads(r["data"]),
+                    data=_parse_row_data(r["data"], r["id"]),
                     created_at=r["created_at"],
                     updated_at=r["updated_at"],
                 )
-                for r in rows
-            ],
+            )
+
+        return RowListResponse(
+            rows=rows,
             total=total,
             limit=limit,
             offset=offset,

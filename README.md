@@ -478,6 +478,11 @@ This provides clear error messages indicating whether the request format is wron
 - **No retroactive validation** - When new columns are added, existing rows aren't backfilled or validated against the new schema until they're updated
 - **No column renaming** - Schema updates only support add/remove, not rename
 - **No default values** - Columns cannot have default values for new rows
+- **No request size limits** - Large payloads (e.g., 500-column tables, massive row data) are not throttled and could impact memory usage
+- **Concurrent write race conditions** - Between checking table existence and performing operations, concurrent requests could theoretically conflict. SQLite's single-writer model mitigates this, but it's a consideration for multi-writer databases.
+- **Empty filter values match empty strings** - `?filter[name]=` matches rows where the column equals an empty string, which may be surprising
+- **No null handling** - Cannot filter for `null` values or distinguish between explicit `null` and missing keys; absent columns are simply omitted
+- **Float precision limits** - Large numbers or high-precision floats may lose precision during JSON serialization/deserialization
 
 ---
 

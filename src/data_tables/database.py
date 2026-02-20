@@ -39,7 +39,7 @@ def close_db(e: Exception | None = None) -> None:
 def transaction(conn: sqlite3.Connection) -> Generator[sqlite3.Connection, None, None]:
     """Context manager for database transactions.
 
-    Automatically commits on success, rolls back on exception.
+    Explicitly begins a transaction, commits on success, rolls back on exception.
 
     Args:
         conn: SQLite database connection.
@@ -50,6 +50,8 @@ def transaction(conn: sqlite3.Connection) -> Generator[sqlite3.Connection, None,
     Raises:
         Exception: Re-raises any exception after rollback.
     """
+    # Explicitly begin transaction for clarity and to ensure isolation
+    conn.execute("BEGIN IMMEDIATE")
     try:
         yield conn
         conn.commit()
