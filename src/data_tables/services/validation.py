@@ -7,8 +7,8 @@ from typing import Any
 from ..models.column import ColumnType
 
 
-class ValidationError(Exception):
-    """Raised when data validation fails."""
+class DataValidationError(Exception):
+    """Raised when row data validation fails against the table schema."""
 
     def __init__(self, message: str, field: str | None = None):
         self.message = message
@@ -32,7 +32,7 @@ class ValidationService:
             The validated (and possibly coerced) value.
 
         Raises:
-            ValidationError: If value cannot be validated as the expected type.
+            DataValidationError: If value cannot be validated as the expected type.
         """
         if value is None:
             return None  # Allow null values for all types
@@ -40,24 +40,26 @@ class ValidationService:
         if column_type == ColumnType.STRING:
             if not isinstance(value, str):
                 actual_type = type(value).__name__
-                raise ValidationError(f"Expected string for column '{column_name}', got {actual_type}", column_name)
+                raise DataValidationError(f"Expected string for column '{column_name}', got {actual_type}", column_name)
             return value
 
         if column_type == ColumnType.NUMBER:
             if isinstance(value, bool):  # bool is subclass of int in Python
-                raise ValidationError(f"Expected number for column '{column_name}', got boolean", column_name)
+                raise DataValidationError(f"Expected number for column '{column_name}', got boolean", column_name)
             if not isinstance(value, (int, float)):
                 actual_type = type(value).__name__
-                raise ValidationError(f"Expected number for column '{column_name}', got {actual_type}", column_name)
+                raise DataValidationError(f"Expected number for column '{column_name}', got {actual_type}", column_name)
             return value
 
         if column_type == ColumnType.BOOLEAN:
             if not isinstance(value, bool):
                 actual_type = type(value).__name__
-                raise ValidationError(f"Expected boolean for column '{column_name}', got {actual_type}", column_name)
+                raise DataValidationError(
+                    f"Expected boolean for column '{column_name}', got {actual_type}", column_name
+                )
             return value
 
-        raise ValidationError(f"Unknown column type: {column_type}", column_name)
+        raise DataValidationError(f"Unknown column type: {column_type}", column_name)
 
     @staticmethod
     def validate_row_data(data: dict[str, Any], columns: dict[str, ColumnType]) -> dict[str, Any]:
@@ -71,14 +73,14 @@ class ValidationService:
             Validated data dict.
 
         Raises:
-            ValidationError: If any field fails validation.
+            DataValidationError: If any field fails validation.
         """
         validated = {}
 
         # Check for unknown columns
         unknown_cols = set(data.keys()) - set(columns.keys())
         if unknown_cols:
-            raise ValidationError(f"Unknown columns: {', '.join(sorted(unknown_cols))}")
+            raise DataValidationError(f"Unknown columns: {', '.join(sorted(unknown_cols))}")
 
         # Validate each provided field
         for col_name, value in data.items():

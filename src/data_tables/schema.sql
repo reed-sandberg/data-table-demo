@@ -21,6 +21,7 @@ CREATE TABLE IF NOT EXISTS columns (
     position INTEGER NOT NULL,
     created_at TEXT DEFAULT (datetime('now')),
     UNIQUE(table_id, name),
+    UNIQUE(table_id, position),  -- Prevents race conditions in concurrent schema updates
     FOREIGN KEY (table_id) REFERENCES tables(id) ON DELETE CASCADE
 );
 

@@ -110,7 +110,9 @@ def update_schema(table_id: str) -> tuple[Response, int]:
     try:
         data = SchemaUpdate.model_validate(request.get_json())
     except ValidationError as e:
-        return jsonify({"error": "Validation error", "details": e.errors()}), 400
+        # Convert Pydantic errors to JSON-serializable format (exclude ctx which may contain exceptions)
+        errors = [{"loc": err.get("loc"), "msg": err.get("msg"), "type": err.get("type")} for err in e.errors()]
+        return jsonify({"error": "Validation error", "details": errors}), 400
 
     try:
         table = TableService.update_schema(table_id, data)

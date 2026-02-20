@@ -19,6 +19,12 @@ class RowNotFoundError(Exception):
     pass
 
 
+class InvalidFilterError(Exception):
+    """Raised when a filter references an unknown column."""
+
+    pass
+
+
 class RowService:
     """Service for row CRUD operations."""
 
@@ -193,11 +199,13 @@ class RowService:
         # Add filter conditions
         if filters:
             column_types = RowService._get_column_types(table_id)
-            for field_name, field_value in filters.items():
-                # Validate filter field exists in schema
-                if field_name not in column_types:
-                    continue  # Ignore unknown filter fields
 
+            # Validate all filter fields exist in schema before processing
+            unknown_columns = set(filters.keys()) - set(column_types.keys())
+            if unknown_columns:
+                raise InvalidFilterError(f"Unknown filter column(s): {', '.join(sorted(unknown_columns))}")
+
+            for field_name, field_value in filters.items():
                 # Use json_extract for filtering
                 col_type = column_types[field_name]
                 query += " AND json_extract(data, ?) = ?"

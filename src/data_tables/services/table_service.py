@@ -196,21 +196,15 @@ class TableService:
                     [table_id, *request.remove_columns],
                 )
 
-                # Update row data to remove these columns
-                # Use json_extract to read JSONB data as JSON text
-                for row in conn.execute(
-                    "SELECT id, json_extract(data, '$') as data_json FROM rows WHERE table_id = ?",
-                    (table_id,),
-                ).fetchall():
-                    import json
-
-                    data = json.loads(row["data_json"])
-                    for col_name in request.remove_columns:
-                        data.pop(col_name, None)
-                    conn.execute(
-                        "UPDATE rows SET data = jsonb(?), updated_at = datetime('now') WHERE id = ?",
-                        (json.dumps(data), row["id"]),
-                    )
+                # Update row data to remove these columns using json_remove()
+                # This is O(N) at the database level with a single UPDATE statement
+                # Build json_remove paths: json_remove(data, '$.col1', '$.col2', ...)
+                json_paths = [f"$.{col_name}" for col_name in request.remove_columns]
+                conn.execute(
+                    f"UPDATE rows SET data = jsonb(json_remove(data, {','.join('?' * len(json_paths))})), "
+                    "updated_at = datetime('now') WHERE table_id = ?",
+                    [*json_paths, table_id],
+                )
 
             # Add new columns
             for col in request.add_columns:

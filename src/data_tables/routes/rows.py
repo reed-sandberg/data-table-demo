@@ -6,9 +6,9 @@ from flask import Blueprint, Response, jsonify, request
 from pydantic import ValidationError
 
 from ..models import RowCreate, RowUpdate
-from ..services.row_service import RowNotFoundError, RowService
+from ..services.row_service import InvalidFilterError, RowNotFoundError, RowService
 from ..services.table_service import TableNotFoundError
-from ..services.validation import ValidationError as DataValidationError
+from ..services.validation import DataValidationError
 
 rows_bp = Blueprint("rows", __name__, url_prefix="/tables/<table_id>/rows")
 
@@ -57,6 +57,8 @@ def list_rows(table_id: str) -> tuple[Response, int]:
         result = RowService.list_rows(table_id, filters=filters, limit=limit, offset=offset)
     except TableNotFoundError as e:
         return jsonify({"error": str(e)}), 404
+    except InvalidFilterError as e:
+        return jsonify({"error": str(e)}), 400
 
     return jsonify(result.model_dump()), 200
 

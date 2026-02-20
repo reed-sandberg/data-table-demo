@@ -193,3 +193,13 @@ class TestFilterRows:
         assert data["total"] == 5
         assert data["limit"] == 2
         assert data["offset"] == 2
+
+    def test_filter_unknown_column_returns_error(self, client: FlaskClient, created_table: str):
+        """Filtering by unknown column returns 400 error instead of silently ignoring."""
+        client.post(f"/tables/{created_table}/rows", json={"data": {"name": "Alice", "age": 30, "active": True}})
+
+        # 'nonexistent' is not a valid column in the schema
+        response = client.get(f"/tables/{created_table}/rows?filter[nonexistent]=value")
+
+        assert response.status_code == 400
+        assert "nonexistent" in response.get_json()["error"].lower()

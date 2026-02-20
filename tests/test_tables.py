@@ -62,6 +62,38 @@ class TestCreateTable:
 
         assert response.status_code == 400
 
+    def test_create_table_max_columns_exceeded(self, client: FlaskClient):
+        """Reject tables with more than 500 columns."""
+        # Create exactly 501 columns to exceed the limit
+        columns = [{"name": f"col_{i}", "type": "string"} for i in range(501)]
+        response = client.post(
+            "/tables",
+            json={
+                "name": "too_many_columns",
+                "columns": columns,
+            },
+        )
+
+        assert response.status_code == 400
+        # Error comes from Pydantic max_length validation on the columns field
+        data = response.get_json()
+        assert "error" in data
+
+    def test_create_table_at_max_columns(self, client: FlaskClient):
+        """Accept table with exactly 500 columns (the limit)."""
+        columns = [{"name": f"col_{i}", "type": "string"} for i in range(500)]
+        response = client.post(
+            "/tables",
+            json={
+                "name": "max_columns_table",
+                "columns": columns,
+            },
+        )
+
+        assert response.status_code == 201
+        data = response.get_json()
+        assert "id" in data
+
 
 class TestGetTable:
     """Tests for GET /tables/<id>."""

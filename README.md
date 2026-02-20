@@ -256,7 +256,6 @@ POST /tables/{table_id}/rows
 ```json
 {
   "id": "660e8400-e29b-41d4-a716-446655440001",
-  "table_id": "550e8400-e29b-41d4-a716-446655440000",
   "data": {
     "email": "alice@example.com",
     "age": 30,
@@ -297,7 +296,6 @@ GET /tables/{table_id}/rows?filter[age]=30&filter[active]=true&limit=10
   "rows": [
     {
       "id": "660e8400-e29b-41d4-a716-446655440001",
-      "table_id": "550e8400-e29b-41d4-a716-446655440000",
       "data": {
         "email": "alice@example.com",
         "age": 30,
@@ -325,7 +323,6 @@ GET /tables/{table_id}/rows/{row_id}
 ```json
 {
   "id": "660e8400-e29b-41d4-a716-446655440001",
-  "table_id": "550e8400-e29b-41d4-a716-446655440000",
   "data": {
     "email": "alice@example.com",
     "age": 30,
@@ -362,7 +359,6 @@ PUT /tables/{table_id}/rows/{row_id}
 ```json
 {
   "id": "660e8400-e29b-41d4-a716-446655440001",
-  "table_id": "550e8400-e29b-41d4-a716-446655440000",
   "data": {
     "email": "alice.updated@example.com",
     "age": 31,
